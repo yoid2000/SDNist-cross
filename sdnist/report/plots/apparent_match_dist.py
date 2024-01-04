@@ -9,7 +9,7 @@ import pandas as pd
 from sdnist.metrics.apparent_match_dist import cellchange
 from sdnist.utils import *
 
-# plt.style.use('seaborn-deep')
+# plt.style.use('seaborn-v0_8-deep')
 
 
 def plot_apparent_match_dist(match_percentages: pd.Series,

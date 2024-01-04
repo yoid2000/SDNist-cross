@@ -10,7 +10,7 @@ from matplotlib import colors
 import pandas as pd
 import numpy as np
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 class GridPlot:

@@ -11,7 +11,7 @@ from sdnist.report import Dataset
 from sdnist.strs import *
 from sdnist.utils import *
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 def l1(pk: List[int], qk: List[int]):

@@ -10,7 +10,7 @@ import pandas as pd
 
 from sdnist.utils import *
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 class CorrelationDifferencePlot:

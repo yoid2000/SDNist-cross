@@ -15,7 +15,7 @@ import matplotlib.image as mpimg
 import sdnist.strs as strs
 from sdnist.utils import *
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 class PCAMetric:
