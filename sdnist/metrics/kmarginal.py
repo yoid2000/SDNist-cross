@@ -3,10 +3,14 @@ import pandas as pd
 from pathlib import Path
 
 from sdnist.report.dataset import Dataset
+from sdnist.report.column_combs.column_combs import ColumnCombs
 import sdnist.load as load
 import sdnist.utils as utils
 
-def compute_marginal_densities(data, marginals):
+def compute_marginal_densities(data, marginals,
+                               col_comb: Optional[ColumnCombs] = None):
+    if col_comb is not None:
+        col_comb.getDataframeByColumns(marginals, version = 'd_')
     counts = data.groupby(marginals).size()
     return counts / data.shape[0]
 
@@ -51,9 +55,11 @@ class KMarginal:
     def __init__(self,
                  target_data: pd.DataFrame,
                  deidentified_data: pd.DataFrame,
-                 group_features: Optional[List[str]] = None):
+                 group_features: Optional[List[str]] = None,
+                 col_comb: Optional[ColumnCombs] = None):
         self.td = target_data
         self.deid = deidentified_data
+        self.col_comb = col_comb
         self.group_features = group_features or []
         self.features = self.td.columns.tolist()
         marg_cols = list(set(self.features).difference(['PUMA', 'INDP']))
@@ -77,7 +83,8 @@ class KMarginal:
         # target data marginal densities
         t_den = compute_marginal_densities(self.td, marginal)
         # deidentified data marginal densities
-        s_den = compute_marginal_densities(self.deid, marginal)
+        s_den = compute_marginal_densities(self.deid, marginal,
+                                           col_comb = self.col_comb)
         # target and deidentified densities absolute differences
         abs_den_diff = t_den.subtract(s_den, fill_value=0).abs()
         return t_den, s_den, abs_den_diff

@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 from sdnist.utils import *
+from sdnist.report.column_combs.column_combs import ColumnCombs
 
 # List of tuples with all the information associated with each inconsistency (abbreviated ic)
 # [(category for ic, name for ic, explanation string for ic, features to highlight for ic)]
@@ -75,8 +76,12 @@ ic_types = [
 
 class Inconsistencies:
 
-    def __init__(self, synthetic_data: pd.DataFrame, out_directory: Path):
+    def __init__(self,
+                 synthetic_data: pd.DataFrame,
+                 out_directory: Path,
+                 col_comb: Optional[ColumnCombs] = None):
         self.s = synthetic_data
+        self.col_comb = col_comb
         self.out_path = out_directory
 
         # dict containing headers and paragraphs for each inconsistency group
@@ -113,130 +118,23 @@ class Inconsistencies:
                             for k, v in self.report_help.items()}
         self.report_data['summary'] = []
 
+
     def compute(self):
         # inconsistency names
         ic_names = [i[NAME] for i in ic_types]
-        fl = self.s.columns.tolist()  # features list
+        ic_features_list_all = [i[FEATURES] for i in ic_types]
+        ic_features_list_distinct = [list(x) for x in set(tuple(x) for x in ic_features_list_all) ]
 
         # inconsistency dictionary--stores lists of violators
         # key = ic name, value = list of record ids that violate the ic
         ic_dict = {name: [] for name in ic_names}
 
-        # look through records, register violations for each row
-        # i = record id, r = record values
-        for i, r in self.s.iterrows():
-            # -------------------age related inconsistencies---------------
-            if "AGEP" in fl and r["AGEP"] < 15:
-                if "DVET" in fl and not (r["DVET"] == 'N'):
-                    ic_dict["child_DVET"].append(i)
-                if "MSP" in fl and not (r["MSP"] == 'N'):
-                    ic_dict["child_MSP"].append(i)
-                if "PINCP" in fl and not (r["PINCP"] == 'N'):
-                    ic_dict["child_PINCP"].append(i)
-                if "PINCP_DECILE" in fl and not (r["PINCP_DECILE"] == 'N'):
-                    ic_dict["child_PINCP_DECILE"].append(i)
-                if "INDP" in fl and not (r["INDP"] == 'N'):
-                    ic_dict["child_INDP"].append(i)
-                if "INDP_CAT" in fl and not (r["INDP_CAT"] == 'N'):
-                    ic_dict["child_INDP_CAT"].append(i)
-                if "EDU" in fl and not (r["EDU"] == 'N') and not (int(r["EDU"]) < 12):
-                    ic_dict["child_phd"].append(i)
-
-                if r["AGEP"] < 10:
-                    # if "NOC" in fl and not (r["NOC"] == 'N'):
-                    #     ic_dict["child_NOC"].append(i)
-
-                    if r["AGEP"] < 5:
-                        if "DPHY" in fl and not (r["DPHY"] == 'N'):
-                            ic_dict["toddler_DPHY"].append(i)
-                        if "DREM" in fl and not (r["DREM"] == 'N'):
-                            ic_dict["toddler_DREM"].append(i)
-                        if "EDU" in fl and not (r["EDU"] == 'N') and not (int(r["EDU"]) < 5):
-                            ic_dict["toddler_diploma"].append(i)
-
-                        if r["AGEP"] < 3:
-                            if "EDU" in fl and not (r["EDU"] == 'N'):
-                                ic_dict["infant_EDU"].append(i)
-
-            if not ("AGEP" in fl):
-                # This forces agreement on MSP, PINCP and PINCP_DECILE if at least 2 exist.
-                if ("MSP" in fl and (r["MSP"] == 'N')) and (
-                        ("PINCP" in fl and not (r["PINCP"] == 'N')) or (
-                        "PINCP_DECILE" in fl and not (r["PINCP_DECILE"] == 'N'))):
-                    ic_dict["adult_child"].append(i)
-                if ("MSP" in fl and not (r["MSP"] == 'N')) and (
-                        ("PINCP" in fl and (r["PINCP"] == 'N')) or (
-                        "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N'))):
-                    ic_dict["adult_child"].append(i)
-                if not ("MSP" in fl) and ("PINCP" in fl) and ("PINCP_DECILE" in fl):
-                    if ((r["PINCP"] == 'N') and not (r["PINCP_DECILE"] == 'N')) or (
-                            not (r["PINCP"] == 'N') and (r["PINCP_DECILE"] == 'N')):
-                        ic_dict["adult_child"].append(i)
-
-            # this catches adults who still have the child 'N' for their features.
-            if "AGEP" in fl and r["AGEP"] > 15:
-                if ("MSP" in fl and (r["MSP"] == 'N')) or (
-                        "PINCP" in fl and (r["PINCP"] == 'N')) or (
-                        "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N')) or (
-                        "EDU" in fl and (r["EDU"] == 'N')) or (
-                        "DPHY" in fl and (r["DPHY"] == 'N')) or (
-                        "DREM" in fl and (r["DREM"] == 'N')):
-                    ic_dict["adult_N"].append(i)
-
-
-            # -------------------work and finance related inconsistencies---------------
-            # income > 300K
-            if "PINCP" in fl and not (r["PINCP"] == 'N') and float(r["PINCP"]) > 3000000:
-                if "POVPIP" in fl and not (r["POVPIP"] == "501"):
-                    ic_dict["wealthy_poor_POVPIP"].append(i)
-                if "PINCP_DECILE" in fl and not (int(r["PINCP_DECILE"]) > 1):
-                    ic_dict["wealthy_poor_POVPIP"].append(i)
-
-            # this currently just checks null value agreement,
-            # if one is null the other should be too
-            if "INDP" in fl and "INDP_CAT" in fl:
-                if ((r["INDP"] == "N") and (r["INDP_CAT"] != "N") or (r["INDP"] != "N") and (
-                        r["INDP_CAT"] == "N")):
-                    ic_dict["invalid_INDP_CAT"].append(i)
-                    # TODO: add INDP CAT and INDP code agreement checks
-
-            # -------------------housing and family related inconsistencies---------------
-            if ("NOC" in fl) and ("NPF" in fl) and (r["NOC"] != "N") and (r["NPF"] != "N"):
-                if not (int(r["NOC"]) < int(r["NPF"])):
-                    ic_dict["too_many_children"].append(i)
-
-            # if group quarters (according to HOUSING_TYPE)
-            if ("HOUSING_TYPE" in fl) and (r["HOUSING_TYPE"] > 1):
-                if "NOC" in fl and not (r["NOC"] == 'N'):
-                    ic_dict["gq_h_family_NOC"].append(i)
-
-                if "NPF" in fl and not (r["NPF"] == 'N'):
-                    ic_dict["gq_h_family_NPF"].append(i)
-
-                if "OWN_RENT" in fl and (r["OWN_RENT"] == 2):
-                    ic_dict["gq_own_jail"].append(i)
-
-                if (r["HOUSING_TYPE"] == 2) and "OWN_RENT" in fl and (r["OWN_RENT"] == 1):
-                    ic_dict["gq_own_jail"].append(i)
-
-                if (r["HOUSING_TYPE"] == 3) and "OWN_RENT" in fl and (r["OWN_RENT"] == 1):
-                    ic_dict["gq_own_dorm"].append(i)
-
-            # if house (according to HOUSING_TYPE)
-            if ("HOUSING_TYPE" in fl) and (int(r["HOUSING_TYPE"]) == 1):
-                if "OWN_RENT" in fl and (r["OWN_RENT"] == 0):
-                    ic_dict["house_OWN_RENT"].append(i)
-
-                if "NOC" in fl and (r["NOC"] == 'N'):
-                    ic_dict["house_NOC"].append(i)
-
-            # if group quarters (according to RENT_OWN)
-            if ("RENT_OWN" in fl) and (int(r["RENT_OWN"]) == 0):
-                if "NOC" in fl and not (r["NOC"] == 'N'):
-                    ic_dict["gq_ro_family_NOC"].append(i)
-
-                if "NPF" in fl and not (r["NPF"] == 'N'):
-                    ic_dict["gq_ro_family_NPF"].append(i)
+        # Make one pass for each set of inconsistency features. We can
+        # extract the appropriate synthesized table for each features set.
+        for features in ic_features_list_distinct:
+            if self.col_comb is not None:
+                self.col_comb.getDataframeByColumns(features, version = 'c_')
+            _one_compute_pass(self.s, features, ic_dict)
 
         # ------- Output Statistics ------------------------
         [n, f] = self.s.shape
@@ -347,3 +245,120 @@ class Inconsistencies:
                                         'Percent Records Inconsistent': r[2]}
                                  for r in overall_stats]
 
+
+def _one_compute_pass(data, fl, ic_dict):
+    # look through records, register violations for each row
+    # i = record id, r = record values
+    for i, r in data.iterrows():
+        # -------------------age related inconsistencies---------------
+        if "AGEP" in fl and r["AGEP"] < 15:
+            if "DVET" in fl and not (r["DVET"] == 'N'):
+                ic_dict["child_DVET"].append(i)
+            if "MSP" in fl and not (r["MSP"] == 'N'):
+                ic_dict["child_MSP"].append(i)
+            if "PINCP" in fl and not (r["PINCP"] == 'N'):
+                ic_dict["child_PINCP"].append(i)
+            if "PINCP_DECILE" in fl and not (r["PINCP_DECILE"] == 'N'):
+                ic_dict["child_PINCP_DECILE"].append(i)
+            if "INDP" in fl and not (r["INDP"] == 'N'):
+                ic_dict["child_INDP"].append(i)
+            if "INDP_CAT" in fl and not (r["INDP_CAT"] == 'N'):
+                ic_dict["child_INDP_CAT"].append(i)
+            if "EDU" in fl and not (r["EDU"] == 'N') and not (int(r["EDU"]) < 12):
+                ic_dict["child_phd"].append(i)
+
+            if r["AGEP"] < 10:
+                # if "NOC" in fl and not (r["NOC"] == 'N'):
+                #     ic_dict["child_NOC"].append(i)
+
+                if r["AGEP"] < 5:
+                    if "DPHY" in fl and not (r["DPHY"] == 'N'):
+                        ic_dict["toddler_DPHY"].append(i)
+                    if "DREM" in fl and not (r["DREM"] == 'N'):
+                        ic_dict["toddler_DREM"].append(i)
+                    if "EDU" in fl and not (r["EDU"] == 'N') and not (int(r["EDU"]) < 5):
+                        ic_dict["toddler_diploma"].append(i)
+
+                    if r["AGEP"] < 3:
+                        if "EDU" in fl and not (r["EDU"] == 'N'):
+                            ic_dict["infant_EDU"].append(i)
+
+        if not ("AGEP" in fl):
+            # This forces agreement on MSP, PINCP and PINCP_DECILE if at least 2 exist.
+            if ("MSP" in fl and (r["MSP"] == 'N')) and (
+                    ("PINCP" in fl and not (r["PINCP"] == 'N')) or (
+                    "PINCP_DECILE" in fl and not (r["PINCP_DECILE"] == 'N'))):
+                ic_dict["adult_child"].append(i)
+            if ("MSP" in fl and not (r["MSP"] == 'N')) and (
+                    ("PINCP" in fl and (r["PINCP"] == 'N')) or (
+                    "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N'))):
+                ic_dict["adult_child"].append(i)
+            if not ("MSP" in fl) and ("PINCP" in fl) and ("PINCP_DECILE" in fl):
+                if ((r["PINCP"] == 'N') and not (r["PINCP_DECILE"] == 'N')) or (
+                        not (r["PINCP"] == 'N') and (r["PINCP_DECILE"] == 'N')):
+                    ic_dict["adult_child"].append(i)
+
+        # this catches adults who still have the child 'N' for their features.
+        if "AGEP" in fl and r["AGEP"] > 15:
+            if ("MSP" in fl and (r["MSP"] == 'N')) or (
+                    "PINCP" in fl and (r["PINCP"] == 'N')) or (
+                    "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N')) or (
+                    "EDU" in fl and (r["EDU"] == 'N')) or (
+                    "DPHY" in fl and (r["DPHY"] == 'N')) or (
+                    "DREM" in fl and (r["DREM"] == 'N')):
+                ic_dict["adult_N"].append(i)
+
+
+        # -------------------work and finance related inconsistencies---------------
+        # income > 300K
+        if "PINCP" in fl and not (r["PINCP"] == 'N') and float(r["PINCP"]) > 3000000:
+            if "POVPIP" in fl and not (r["POVPIP"] == "501"):
+                ic_dict["wealthy_poor_POVPIP"].append(i)
+            if "PINCP_DECILE" in fl and not (int(r["PINCP_DECILE"]) > 1):
+                ic_dict["wealthy_poor_POVPIP"].append(i)
+
+        # this currently just checks null value agreement,
+        # if one is null the other should be too
+        if "INDP" in fl and "INDP_CAT" in fl:
+            if ((r["INDP"] == "N") and (r["INDP_CAT"] != "N") or (r["INDP"] != "N") and (
+                    r["INDP_CAT"] == "N")):
+                ic_dict["invalid_INDP_CAT"].append(i)
+                # TODO: add INDP CAT and INDP code agreement checks
+
+        # -------------------housing and family related inconsistencies---------------
+        if ("NOC" in fl) and ("NPF" in fl) and (r["NOC"] != "N") and (r["NPF"] != "N"):
+            if not (int(r["NOC"]) < int(r["NPF"])):
+                ic_dict["too_many_children"].append(i)
+
+        # if group quarters (according to HOUSING_TYPE)
+        if ("HOUSING_TYPE" in fl) and (r["HOUSING_TYPE"] > 1):
+            if "NOC" in fl and not (r["NOC"] == 'N'):
+                ic_dict["gq_h_family_NOC"].append(i)
+
+            if "NPF" in fl and not (r["NPF"] == 'N'):
+                ic_dict["gq_h_family_NPF"].append(i)
+
+            if "OWN_RENT" in fl and (r["OWN_RENT"] == 2):
+                ic_dict["gq_own_jail"].append(i)
+
+            if (r["HOUSING_TYPE"] == 2) and "OWN_RENT" in fl and (r["OWN_RENT"] == 1):
+                ic_dict["gq_own_jail"].append(i)
+
+            if (r["HOUSING_TYPE"] == 3) and "OWN_RENT" in fl and (r["OWN_RENT"] == 1):
+                ic_dict["gq_own_dorm"].append(i)
+
+        # if house (according to HOUSING_TYPE)
+        if ("HOUSING_TYPE" in fl) and (int(r["HOUSING_TYPE"]) == 1):
+            if "OWN_RENT" in fl and (r["OWN_RENT"] == 0):
+                ic_dict["house_OWN_RENT"].append(i)
+
+            if "NOC" in fl and (r["NOC"] == 'N'):
+                ic_dict["house_NOC"].append(i)
+
+        # if group quarters (according to RENT_OWN)
+        if ("RENT_OWN" in fl) and (int(r["RENT_OWN"]) == 0):
+            if "NOC" in fl and not (r["NOC"] == 'N'):
+                ic_dict["gq_ro_family_NOC"].append(i)
+
+            if "NPF" in fl and not (r["NPF"] == 'N'):
+                ic_dict["gq_ro_family_NPF"].append(i)
