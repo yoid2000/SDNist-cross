@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from sdnist.metrics.inconsistency import Inconsistencies
+from sdnist.report.column_combs.column_combs import ColumnCombs
 from sdnist.report import Dataset
 from sdnist.report.report_data import \
     ReportData, ReportUIData, UtilityScorePacket, Attachment, AttachmentType
@@ -32,10 +33,15 @@ class InconsistenciesReport:
     in the deidentified data.
     """
 
-    def __init__(self, dataset: Dataset, ui_data: ReportUIData, report_data: ReportData):
+    def __init__(self,
+                 dataset: Dataset,
+                 ui_data: ReportUIData,
+                 report_data: ReportData,
+                 col_comb: Optional[ColumnCombs] = None):
         self.s = dataset.c_synthetic_data
         self.r_ui_d = ui_data
         self.rd = report_data
+        self.col_comb = col_comb
         self.ic = None
 
         self.attachments = []
@@ -52,7 +58,7 @@ class InconsistenciesReport:
         create_path(o_path)  # create path if does not already exist
 
         # initialize an instance of inconsistencies metric
-        self.ic = Inconsistencies(self.s, o_path)
+        self.ic = Inconsistencies(self.s, o_path, col_comb=self.col_comb)
         self.ic.compute()  # compute inconsistencies in deidentified data
 
         # add inconsistencies stats and data to json report data

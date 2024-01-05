@@ -6,12 +6,17 @@ from sdnist.report.plots import ApparentMatchDistributionPlot
 from sdnist.metrics.unique_exact_matches import unique_exact_matches
 from sdnist.report.report_data import \
     PrivacyScorePacket, Attachment, AttachmentType
+from sdnist.report.column_combs.column_combs import ColumnCombs
 from sdnist.report.score.paragraphs import *
 from sdnist.strs import *
 from sdnist.utils import *
 
 
-def privacy_score(dataset: Dataset, ui_data: ReportUIData, report_data, log: SimpleLogger) \
+def privacy_score(dataset: Dataset,
+                  ui_data: ReportUIData,
+                  report_data,
+                  log: SimpleLogger,
+                  col_comb: Optional[ColumnCombs] = None) \
         -> Tuple[ReportUIData, ReportData]:
     ds = dataset
     r_ui_d = ui_data
@@ -69,6 +74,8 @@ def privacy_score(dataset: Dataset, ui_data: ReportUIData, report_data, log: Sim
     if ds.challenge == CENSUS:
         quasi_idf = ['SEX', 'MSP', 'RAC1P', 'OWN_RENT', 'EDU', 'PUMA', 'INDP_CAT', 'HISP']
         quasi_idf = list(set(ds.features).intersection(set(quasi_idf)))
+        if col_comb is not None:
+            col_comb.getDataframeByColumns(quasi_idf, version='c_')
         excluded = []
         amd_plot = ApparentMatchDistributionPlot(ds.c_synthetic_data,
                                                  ds.c_target_data,

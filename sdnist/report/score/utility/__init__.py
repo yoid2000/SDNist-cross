@@ -22,6 +22,7 @@ from sdnist.report.score.utility.inconsistency import \
     InconsistenciesReport
 from sdnist.report.score.utility.pca import PCAReport
 from sdnist.report import Dataset
+from sdnist.report.column_combs.column_combs import ColumnCombs
 from sdnist.report.report_data import \
     ReportData, ReportUIData, UtilityScorePacket, Attachment, AttachmentType, \
     DatasetType, DataDescriptionPacket
@@ -102,7 +103,9 @@ def worst_score_breakdown(worst_scores: List,
                           dataset: Dataset,
                           ui_data: ReportUIData,
                           report_data: ReportData,
-                          feature: str) -> Tuple[List[Attachment], Dict[str, any]]:
+                          feature: str,
+                          col_comb: Optional[ColumnCombs]=None) \
+                          -> Tuple[List[Attachment], Dict[str, any]]:
     ds = dataset
     r_ui_d = ui_data
     rd = report_data
@@ -124,7 +127,8 @@ def worst_score_breakdown(worst_scores: List,
         os.mkdir(out_dir)
 
     up = UnivariatePlots(s, t,
-                         ds, out_dir, ds.challenge, worst_univariates_to_display=3)
+                         ds, out_dir, ds.challenge, worst_univariates_to_display=3,
+                         col_comb=col_comb)
     u_feature_data = up.save(level=3)
     k_marg_break_rd[f'worst_{len(wpf)}_puma_univariate'] = up.report_data(level=3)
     k_marg_break_rd[f'worst_{len(wpf)}_puma_k_marginal_scores'] = \
@@ -187,7 +191,8 @@ def worst_score_breakdown(worst_scores: List,
     corr_features = ds.config[strs.CORRELATION_FEATURES]
     corr_features = [f for f in ds.data_dict.keys() if f in corr_features]
     pcd = PearsonCorrelationDifference(t, s,
-                                       corr_features)
+                                       corr_features,
+                                       col_comb=col_comb)
     pcd.compute()
     pcp = PearsonCorrelationPlot(pcd.pp_corr_diff, out_dir)
     pcp_saved_file_paths = pcp.save(path_level=3)
@@ -287,7 +292,8 @@ def kmarginal_score_packet(k_marginal_score: int,
                            subsample_group_scores: Optional[pd.DataFrame],
                            worst_breakdown_feature: str,
                            group_features: List[str],
-                           group_scores: Optional[pd.DataFrame] = None) \
+                           group_scores: Optional[pd.DataFrame] = None,
+                           col_comb: Optional[ColumnCombs] = None) \
         -> Tuple[UtilityScorePacket, UtilityScorePacket]:
 
     def min_index(data_list: List[float]):
@@ -399,7 +405,8 @@ def kmarginal_score_packet(k_marginal_score: int,
                                                                   dataset,
                                                                   ui_data,
                                                                   report_data,
-                                                                  worst_breakdown_feature)
+                                                                  worst_breakdown_feature,
+                                                                  col_comb=col_comb)
 
         # all score attachment
         as_para_a = Attachment(name=f'K-Marginal Score in Each ' + '-'.join(group_features),
@@ -469,7 +476,8 @@ def grid_plot_attachment(group_features: List[str],
 
 
 def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportData,
-                  log: SimpleLogger) \
+                  log: SimpleLogger,
+                  col_comb: Optional[ColumnCombs]=None) \
         -> Tuple[ReportUIData, ReportData]:
     ds = dataset
     r_ui_d = ui_data  # report ui data
@@ -483,7 +491,8 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
     if ds.challenge == strs.CENSUS:
         log.msg('Univariates', level=3)
         up = UnivariatePlots(ds.d_synthetic_data, ds.d_target_data,
-                             ds, r_ui_d.output_directory, ds.challenge)
+                             ds, r_ui_d.output_directory, ds.challenge,
+                             col_comb=col_comb)
         u_feature_data = up.save()  # univariate features data
         rd.add('Univariate', up.report_data())
 
@@ -541,12 +550,17 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
         cdp_saved_file_paths = []
         pcp_saved_file_paths = []
         if len(corr_features) > 1:
-            cdp = CorrelationDifferencePlot(ds.t_synthetic_data, ds.t_target_data, r_ui_d.output_directory,
-                                            corr_features)
+            cdp = CorrelationDifferencePlot(ds.t_synthetic_data,
+                                            ds.t_target_data,
+                                            r_ui_d.output_directory,
+                                            corr_features,
+                                            col_comb=col_comb)
             cdp_saved_file_paths = cdp.save()
 
-            pcd = PearsonCorrelationDifference(ds.t_target_data, ds.t_synthetic_data,
-                                               corr_features)
+            pcd = PearsonCorrelationDifference(ds.t_target_data,
+                                               ds.t_synthetic_data,
+                                               corr_features,
+                                               col_comb=col_comb)
             pcd.compute()
             pcp = PearsonCorrelationPlot(pcd.pp_corr_diff, r_ui_d.output_directory)
             pcp_saved_file_paths = pcp.save()
@@ -571,7 +585,8 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
     # compute scores and plots
     s = KMarginal(ds.d_target_data,
                   ds.d_synthetic_data,
-                  group_features)
+                  group_features,
+                  col_comb=col_comb)
 
     s.compute_score()
     metric_name = s.NAME
@@ -593,7 +608,8 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
                                                               s_puma_scores,
                                                               'PUMA',
                                                               group_features,
-                                                              group_scores)
+                                                              group_scores,
+                                                              col_comb=col_comb)
     log.end_msg()
 
     log.msg('PropensityMSE', level=3)
@@ -687,7 +703,7 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
                                   None,
                                   corr_metric_a))
     log.msg('Linear Regression', level=3)
-    lgr = LinearRegressionReport(ds, r_ui_d, rd)
+    lgr = LinearRegressionReport(ds, r_ui_d, rd, col_comb=col_comb)
     lgr.add_to_ui()
     log.end_msg()
 
@@ -700,7 +716,7 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
     log.end_msg()
 
     log.msg('Inconsistencies', level=3)
-    icr = InconsistenciesReport(ds, r_ui_d, rd)
+    icr = InconsistenciesReport(ds, r_ui_d, rd, col_comb=col_comb)
     icr.add_to_ui()
     log.end_msg()
 

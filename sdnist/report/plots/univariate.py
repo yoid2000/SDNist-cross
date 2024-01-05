@@ -8,10 +8,11 @@ import pandas as pd
 from scipy.stats import entropy
 
 from sdnist.report import Dataset
+from sdnist.report.column_combs.column_combs import ColumnCombs
 from sdnist.strs import *
 from sdnist.utils import *
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 def l1(pk: List[int], qk: List[int]):
@@ -40,7 +41,8 @@ class UnivariatePlots:
                  dataset: Dataset,
                  output_directory: Path,
                  challenge: str = CENSUS,
-                 worst_univariates_to_display: Optional[int] = None):
+                 worst_univariates_to_display: Optional[int] = None,
+                 col_comb: Optional[ColumnCombs]=None):
         """
         Computes and creates univariate distribution plots of the worst
         performing variables in synthetic data
@@ -62,6 +64,7 @@ class UnivariatePlots:
         """
         self.syn = synthetic
         self.tar = target
+        self.col_comb = col_comb
 
         self.schema = dataset.schema
         self.dataset = dataset
@@ -98,7 +101,9 @@ class UnivariatePlots:
         # divergence dataframe
         div_df = divergence(self.syn,
                             self.tar,
-                            self.schema, ignore_features)
+                            self.schema,
+                            ignore_features,
+                            col_comb=self.col_comb)
         self.div_data = div_df
         # select 3 features with worst divergence
         # div_df = div_df.head(3)
@@ -108,6 +113,7 @@ class UnivariatePlots:
                                     self.tar,
                                     div_df[FEATURE].tolist(),
                                     self.out_path,
+                                    col_comb=self.col_comb,
                                     level=level)
         return self.feat_data
 
@@ -117,6 +123,7 @@ class UnivariatePlots:
                                target: pd.DataFrame,
                                features: List,
                                output_directory: Path,
+                               col_comb: Optional[ColumnCombs]=None,
                                level=2):
         ds = dataset
         o_path = output_directory
@@ -124,6 +131,7 @@ class UnivariatePlots:
         saved_file_paths = []
         INDP = 'INDP'
         INDP_CAT = "INDP_CAT"
+        # PF: TODO not sure if this synthetic.index thing will hurt me
         o_tar = ds.target_data.loc[target.index]
         o_syn = ds.c_synthetic_data.loc[synthetic.index]
         schema = ds.schema
@@ -132,6 +140,7 @@ class UnivariatePlots:
             self.uni_counts[f] = dict()
             if f == INDP and INDP_CAT in target.columns.tolist():
                 all_sectors = o_tar[INDP_CAT].unique().tolist()
+                col_comb.getDataframeByColumns([INDP_CAT],version='c_')
                 set(all_sectors).update(set(o_syn[INDP_CAT].unique().tolist()))
                 selected = []
                 # print(all_sectors)
@@ -206,6 +215,7 @@ class UnivariatePlots:
             else:
                 plt.figure(figsize=(8, 3), dpi=100)
                 file_path = Path(o_path, f'{f}.jpg')
+                col_comb.getDataframeByColumns([f])
                 values = set(target[f].unique().tolist()).union(synthetic[f].unique().tolist())
                 values = sorted(values)
                 val_df = pd.DataFrame(values, columns=[f])
@@ -301,7 +311,8 @@ class UnivariatePlots:
 def divergence(synthetic: pd.DataFrame,
                target: pd.DataFrame,
                schema: Dict[str, any],
-               ignore_features: Optional[List[str]] = None):
+               ignore_features: Optional[List[str]] = None,
+               col_comb: Optional[ColumnCombs]=None):
     if not ignore_features:
         ignore_features = []
 
@@ -313,6 +324,7 @@ def divergence(synthetic: pd.DataFrame,
             continue
         if var in ignore_features:
             continue
+        col_comb.getDataframeByColumns([var])
         values = set(target[var].unique().tolist()).union(synthetic[var].unique().tolist())
         values = sorted(values)
         val_df = pd.DataFrame(values, columns=[var])

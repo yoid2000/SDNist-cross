@@ -11,6 +11,7 @@ from sdnist.load import data_challenge_map
 from sdnist.report import \
     generate, utility_score, privacy_score,\
     ReportUIData, Dataset, ReportData
+from sdnist.report.column_combs.column_combs import ColumnCombs
 from sdnist.report.dataset import data_description
 from sdnist.load import TestDatasetName
 
@@ -41,13 +42,16 @@ def run(synthetic_filepath: Path,
         ui_data = data_description(dataset, ui_data, report_data, labels_dict)
         log.end_msg()
 
+        log.msg('Loading Column Combinations Synthetic Data', level=2)
+        col_comb = ColumnCombs(synthetic_filepath)
+
         # Create scores
         log.msg('Computing Utility Scores', level=2)
-        ui_data, report_data = utility_score(dataset, ui_data, report_data, log)
+        ui_data, report_data = utility_score(dataset, ui_data, report_data, log, col_comb=col_comb)
         log.end_msg()
 
         log.msg('Computing Privacy Scores', level=2)
-        ui_data, report_data = privacy_score(dataset, ui_data, report_data, log)
+        ui_data, report_data = privacy_score(dataset, ui_data, report_data, log, col_comb=col_comb)
         log.end_msg()
 
         log.msg('Saving Report Data')
@@ -56,10 +60,12 @@ def run(synthetic_filepath: Path,
         report_data.data['created_on'] = ui_data['Created on']
         report_data.save()
         log.end_msg()
+        col_comb.saveEncounteredColumns()
     else:
         with open(outfile, 'r') as f:
             ui_data = json.load(f)
     log.end_msg()
+    col_comb.saveEncounteredColumns()
     # Generate Report
     generate(ui_data, output_directory, show_report)
     log.msg(f'Reports available at path: {output_directory}', level=0, timed=False,

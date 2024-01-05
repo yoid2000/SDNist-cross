@@ -9,8 +9,9 @@ import numpy as np
 import pandas as pd
 
 from sdnist.utils import *
+from sdnist.report.column_combs.column_combs import ColumnCombs
 
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 
 class CorrelationDifferencePlot:
@@ -18,7 +19,8 @@ class CorrelationDifferencePlot:
                  synthetic: pd.DataFrame,
                  target: pd.DataFrame,
                  output_directory: Path,
-                 features: List[str]):
+                 features: List[str],
+                 col_comb: Optional[ColumnCombs]=None):
         """
         Computes and plots features correlation difference between
         synthetic and target data
@@ -36,6 +38,7 @@ class CorrelationDifferencePlot:
         """
         self.syn = synthetic
         self.tar = target
+        self.col_comb = col_comb
         self.o_dir = output_directory
         self.o_path = Path(self.o_dir, 'correlation_difference')
         self.features = features
@@ -50,7 +53,8 @@ class CorrelationDifferencePlot:
         os.mkdir(self.o_path)
 
     def save(self) -> List[Path]:
-        corr_df = correlation_difference(self.syn, self.tar, self.features)
+        corr_df = correlation_difference(self.syn, self.tar, self.features,
+                                         col_comb=self.col_comb)
         plot_paths = save_correlation_difference_plot(corr_df, self.o_path)
         self.report_data = {"correlation_difference": relative_path(save_data_frame(corr_df,
                                                                       self.o_path,
@@ -59,12 +63,15 @@ class CorrelationDifferencePlot:
         return plot_paths
 
 
-def correlations(data: pd.DataFrame, features: List[str]):
+def correlations(data: pd.DataFrame, features: List[str],
+                 col_comb: Optional[ColumnCombs] = None):
     corr_list = []
 
     for f_a in features:
         f_a_corr = []
         for f_b in features:
+            if col_comb is not None:
+                col_comb.getDataframeByColumns([f_a, f_b], version='t_')
             c_val = data[f_a].corr(data[f_b], method='kendall')
             f_a_corr.append(c_val)
         corr_list.append(f_a_corr)
@@ -74,9 +81,10 @@ def correlations(data: pd.DataFrame, features: List[str]):
 
 def correlation_difference(synthetic: pd.DataFrame,
                            target: pd.DataFrame,
-                           features: List[str]) -> pd.DataFrame:
+                           features: List[str],
+                           col_comb: Optional[ColumnCombs] = None) -> pd.DataFrame:
 
-    syn_corr = correlations(synthetic, features)
+    syn_corr = correlations(synthetic, features, col_comb=col_comb)
     tar_corr = correlations(target, features)
 
     diff = syn_corr - tar_corr

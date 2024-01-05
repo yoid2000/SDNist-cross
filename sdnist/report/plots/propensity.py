@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sdnist.utils import *
+from sdnist.report.column_combs.column_combs import ColumnCombs
 
 
 class PropensityDistribution:

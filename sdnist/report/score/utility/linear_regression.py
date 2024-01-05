@@ -9,6 +9,7 @@ from sdnist.report.report_data import \
     ReportData, ReportUIData, UtilityScorePacket, Attachment, AttachmentType
 import sdnist.strs as strs
 from sdnist.utils import *
+from sdnist.report.column_combs.column_combs import ColumnCombs
 
 
 def compute_linear_regression(target: pd.DataFrame,
@@ -81,7 +82,10 @@ class LinearRegressionReport:
     OTHER_REQ_FEATURES = ['RAC1P', 'SEX']
     AIANNH = 'American Indian, Alaskan Native and Native Hawaiians (AIANNH)'
 
-    def __init__(self, dataset: Dataset, ui_data: ReportUIData, report_data: ReportData):
+    def __init__(self, dataset: Dataset,
+                 ui_data: ReportUIData,
+                 report_data: ReportData,
+                 col_comb: Optional[ColumnCombs] = None):
         # required features
         req_f = self.REQUIRED_FEATURES + self.OTHER_REQ_FEATURES
         # available features
@@ -89,6 +93,7 @@ class LinearRegressionReport:
 
         # take subset of target and deidentified data and convert
         # features to numerical values
+        col_comb.getDataframeByColumns(available_f, version='c_')
         self.t = to_num(dataset.target_data[available_f].copy())
         self.s = to_num(dataset.c_synthetic_data[available_f].copy())
         # data dictionary

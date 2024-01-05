@@ -5,7 +5,7 @@ import pandas as pd
 from scipy import stats
 
 import matplotlib.pyplot as plt
-plt.style.use('seaborn-deep')
+plt.style.use('seaborn-v0_8-deep')
 
 from sdnist.utils import *
 
