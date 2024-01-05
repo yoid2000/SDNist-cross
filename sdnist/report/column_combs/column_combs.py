@@ -24,6 +24,9 @@ class ColumnCombs:
         """
         Returns the synthetic dataframe with the corresponding columns
         """
+        # Remove duplicates (can happen if for instance correlation between
+        # the same column is being computed)
+        columns = list(set(columns))
         columns.sort()
         self.encountered_combs.append([version, columns])
         pass
