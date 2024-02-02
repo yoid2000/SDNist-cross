@@ -10,31 +10,41 @@ from sdnist.utils import SimpleLogger
 from sdnist.load import TestDatasetName
 
 def _makeColumnsKey(columns):
-    return '.'.join(columns)
+    return '.'.join(columns.sort())
 
 class ColumnCombs:
     def __init__(self,
-                 dataset: Dataset,
                  synthetic_filepath: Path,
                  dataset_name: TestDatasetName,
-                 data_root: Path
+                 data_root: Path,
+                 exact_matches_only: Optional[bool] = False 
                  ):
         """
         Reads in all of the synthetic tables (for each column combination)
+        Remembers which synthetic table has the most columns. This table is returned
+        when there is no exact column combination match.
 
         Parameters
         ----------
-            dataset: Dataset,
-                The dataset created by the main program
             synthetic_filepath: Path,
                 Path to the synthetic datafile with all columns
                 All synthetic datafiles must be in the same directory
+            data_root: Path,
+                The data_root of `report/__main__.py`
+            exact_matches_only: bool
+                Set to True if only exact column matches should be used. 
+                When True, throws an exception if exact match not found.
+                When False, returns table with all combinations if exact match
+                    not found.
         """
+        self.exact_matches_only = exact_matches_only
         self.col_combs_dir = synthetic_filepath.parent
         self.encountered_combs = []
         self.missing_combs = []
         csv_files = [f for f in os.listdir(self.col_combs_dir) if f.endswith('.csv')]
         self.comb_dataframes = {}
+        max_num_columns = 0
+        self.default_col_key = ''
         for csv_file in csv_files:
             csv_path = os.path.join(self.col_combs_dir, csv_file)
             df = pd.read_csv(csv_path)
@@ -43,6 +53,8 @@ class ColumnCombs:
             comb_dataset = Dataset(csv_path, log, dataset_name, data_root, False)
             columns = comb_dataset.synthetic_data.columns.tolist()
             col_key = _makeColumnsKey(columns)
+            if len(columns) > max_num_columns:
+                self.default_col_key = col_key
             if comb_dataset.d_synthetic_data is None:
                 raise Exception(f'Missing d_synthetic_data for {col_key}')
             if comb_dataset.t_synthetic_data is None:
@@ -64,7 +76,10 @@ class ColumnCombs:
         self.encountered_combs.append([version, columns])
         col_key = _makeColumnsKey(columns)
         if col_key not in self.comb_dataframes:
-            raise Exception(f'Could not find {col_key} in comb_dataframes')
+            if self.exact_matches_only:
+                raise Exception(f'Could not find {col_key} in comb_dataframes')
+            else:
+                col_key = self.default_col_key
         if version == 'd_':
             return self.comb_dataframes[col_key].d_synthetic_data
         elif version == 't_':

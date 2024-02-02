@@ -42,7 +42,7 @@ def run(synthetic_filepath: Path,
         log.end_msg()
 
         log.msg('Loading Column Combinations Synthetic Data', level=2)
-        col_comb = ColumnCombs(dataset, synthetic_filepath, dataset_name, data_root)
+        col_comb = ColumnCombs(synthetic_filepath, dataset_name, data_root)
 
         # Create scores
         log.msg('Computing Utility Scores', level=2)

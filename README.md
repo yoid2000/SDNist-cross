@@ -1,3 +1,17 @@
+# SDNist modified to deal with multiple synthetic tables
+
+The original SDNist software package assumes a single synthetic table for analysis. This software (SDNist-cross) modified SDNist so that it can accept multiple synthetic tables representing a single original dataset (for instance, tables for each individual column, tables for each column pair, and so on).
+
+Normal use of SDNist requires that the path to a single synthetic table is specified in the command line, for example:
+
+```
+python -m sdnist.report path/to/dir/syn_table.csv TX
+```
+
+For SDNist-cross, the same command line syntax is used, but all of the synthetic tables must be in the same directory. In other words, the directory at `path/to/dir` contains `syn_table.csv` (the table with all columns) as well as all the tables with column subsets.
+
+Note that if all of the 24 columns are used, then there are a total of 440 column combinations (in addition to the complete table). The list of column combinations can be found at `sdnist/report/column_combs/all_column_combinations.json`.
+
 # SDNist v2.3: Deidentified Data Report Tool
 
 ## [SDNist is the offical software package for engaging in the NIST Collaborative Research Cycle](https://pages.nist.gov/privacy_collaborative_research_cycle)
