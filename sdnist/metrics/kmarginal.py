@@ -9,8 +9,9 @@ import sdnist.utils as utils
 
 def compute_marginal_densities(data, marginals,
                                col_comb: Optional[ColumnCombs] = None):
+    data = data.copy()
     if col_comb is not None:
-        col_comb.getDataframeByColumns(marginals, version = 'd_')
+        data = col_comb.getDataframeByColumns(marginals, version = 'd_')
     counts = data.groupby(marginals).size()
     return counts / data.shape[0]
 

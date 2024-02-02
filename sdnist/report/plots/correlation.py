@@ -67,11 +67,12 @@ def correlations(data: pd.DataFrame, features: List[str],
                  col_comb: Optional[ColumnCombs] = None):
     corr_list = []
 
+    data = data.copy()
     for f_a in features:
         f_a_corr = []
         for f_b in features:
             if col_comb is not None:
-                col_comb.getDataframeByColumns([f_a, f_b], version='t_')
+                data = col_comb.getDataframeByColumns([f_a, f_b], version='t_')
             c_val = data[f_a].corr(data[f_b], method='kendall')
             f_a_corr.append(c_val)
         corr_list.append(f_a_corr)

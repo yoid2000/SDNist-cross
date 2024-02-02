@@ -93,9 +93,9 @@ class LinearRegressionReport:
 
         # take subset of target and deidentified data and convert
         # features to numerical values
-        col_comb.getDataframeByColumns(available_f, version='c_')
+        c_syn = col_comb.getDataframeByColumns(available_f, version='c_')
         self.t = to_num(dataset.target_data[available_f].copy())
-        self.s = to_num(dataset.c_synthetic_data[available_f].copy())
+        self.s = to_num(c_syn[available_f].copy())
         # data dictionary
         self.d_dict = dataset.data_dict
         self.r_ui_d = ui_data  # report ui data
