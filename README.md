@@ -10,7 +10,7 @@ python -m sdnist.report path/to/dir/syn_table.csv TX
 
 For SDNist-cross, the same command line syntax is used, but all of the synthetic tables must be in the same directory. In other words, the directory at `path/to/dir` contains `syn_table.csv` (the table with all columns) as well as all the tables with column subsets.
 
-Note that if all of the 24 columns are used, then there are a total of 439 column combinations (in addition to the complete table). The list of column combinations can be found at `sdnist/report/column_combs/all_column_combinations.json`.
+Note that if all of the 24 columns are used, then there are a total of 445 column combinations (in addition to the complete table). The list of column combinations can be found at `sdnist/report/column_combs/all_column_combinations.json`.
 
 # SDNist v2.3: Deidentified Data Report Tool
 

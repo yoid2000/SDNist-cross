@@ -42,7 +42,9 @@ class UnivariatePlots:
                  output_directory: Path,
                  challenge: str = CENSUS,
                  worst_univariates_to_display: Optional[int] = None,
-                 col_comb: Optional[ColumnCombs]=None):
+                 col_comb: Optional[ColumnCombs] = None,
+                 wpf_values: Optional[List] = None,
+                 wpf_feature: Optional[str] = None):
         """
         Computes and creates univariate distribution plots of the worst
         performing variables in synthetic data
@@ -65,6 +67,8 @@ class UnivariatePlots:
         self.syn = synthetic
         self.tar = target
         self.col_comb = col_comb
+        self.wpf_values = wpf_values
+        self.wpf_feature = wpf_feature
 
         self.schema = dataset.schema
         self.dataset = dataset
@@ -103,7 +107,9 @@ class UnivariatePlots:
                             self.tar,
                             self.schema,
                             ignore_features,
-                            col_comb=self.col_comb)
+                            col_comb = self.col_comb,
+                            wpf_values = self.wpf_values,
+                            wpf_feature = self.wpf_feature)
         self.div_data = div_df
         # select 3 features with worst divergence
         # div_df = div_df.head(3)
@@ -113,7 +119,9 @@ class UnivariatePlots:
                                     self.tar,
                                     div_df[FEATURE].tolist(),
                                     self.out_path,
-                                    col_comb=self.col_comb,
+                                    col_comb = self.col_comb,
+                                    wpf_values = self.wpf_values,
+                                    wpf_feature = self.wpf_feature,
                                     level=level)
         return self.feat_data
 
@@ -123,7 +131,9 @@ class UnivariatePlots:
                                target: pd.DataFrame,
                                features: List,
                                output_directory: Path,
-                               col_comb: Optional[ColumnCombs]=None,
+                               col_comb: Optional[ColumnCombs] = None,
+                               wpf_values: Optional[List] = None,
+                               wpf_feature: Optional[str] = None,
                                level=2):
         # Need to make a copy because may overwrite this with synthetic version
         synthetic = synthetic.copy()
@@ -219,7 +229,10 @@ class UnivariatePlots:
             else:
                 plt.figure(figsize=(8, 3), dpi=100)
                 file_path = Path(o_path, f'{f}.jpg')
-                synthetic = col_comb.getDataframeByColumns([f], version = 'd_')
+                synthetic = col_comb.getDataframeByColumns(columns = [f],
+                                                           wpf_values = wpf_values,
+                                                           wpf_feature = wpf_feature,
+                                                           version = 'd_')
                 values = set(target[f].unique().tolist()).union(synthetic[f].unique().tolist())
                 values = sorted(values)
                 val_df = pd.DataFrame(values, columns=[f])
@@ -311,12 +324,13 @@ class UnivariatePlots:
 
         return saved_file_paths
 
-
 def divergence(synthetic: pd.DataFrame,
                target: pd.DataFrame,
                schema: Dict[str, any],
                ignore_features: Optional[List[str]] = None,
-               col_comb: Optional[ColumnCombs]=None):
+               col_comb: Optional[ColumnCombs] = None,
+               wpf_values: Optional[List] = None,
+               wpf_feature: Optional[str] = None):
     if not ignore_features:
         ignore_features = []
 
@@ -330,7 +344,10 @@ def divergence(synthetic: pd.DataFrame,
             continue
         if var in ignore_features:
             continue
-        synthetic = col_comb.getDataframeByColumns([var], version = 'd_')
+        synthetic = col_comb.getDataframeByColumns(columns = [var],
+                                                   wpf_values = wpf_values,
+                                                   wpf_feature = wpf_feature,
+                                                   version = 'd_')
         values = set(target[var].unique().tolist()).union(synthetic[var].unique().tolist())
         values = sorted(values)
         val_df = pd.DataFrame(values, columns=[var])

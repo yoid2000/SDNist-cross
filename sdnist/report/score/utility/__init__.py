@@ -128,7 +128,7 @@ def worst_score_breakdown(worst_scores: List,
 
     up = UnivariatePlots(s, t,
                          ds, out_dir, ds.challenge, worst_univariates_to_display=3,
-                         col_comb=col_comb)
+                         col_comb=col_comb, wpf_values=wpf, wpf_feature=feature)
     u_feature_data = up.save(level=3)
     k_marg_break_rd[f'worst_{len(wpf)}_puma_univariate'] = up.report_data(level=3)
     k_marg_break_rd[f'worst_{len(wpf)}_puma_k_marginal_scores'] = \
@@ -192,7 +192,9 @@ def worst_score_breakdown(worst_scores: List,
     corr_features = [f for f in ds.data_dict.keys() if f in corr_features]
     pcd = PearsonCorrelationDifference(t, s,
                                        corr_features,
-                                       col_comb=col_comb)
+                                       col_comb=col_comb,
+                                       wpf_values=wpf,
+                                       wpf_feature=feature)
     pcd.compute()
     pcp = PearsonCorrelationPlot(pcd.pp_corr_diff, out_dir)
     pcp_saved_file_paths = pcp.save(path_level=3)

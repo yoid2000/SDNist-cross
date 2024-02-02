@@ -10,7 +10,8 @@ from sdnist.utils import SimpleLogger
 from sdnist.load import TestDatasetName
 
 def _makeColumnsKey(columns):
-    return '.'.join(columns.sort())
+    columns.sort()
+    return '.'.join(columns)
 
 class ColumnCombs:
     def __init__(self,
@@ -55,6 +56,7 @@ class ColumnCombs:
             col_key = _makeColumnsKey(columns)
             if len(columns) > max_num_columns:
                 self.default_col_key = col_key
+                max_num_columns = len(columns)
             if comb_dataset.d_synthetic_data is None:
                 raise Exception(f'Missing d_synthetic_data for {col_key}')
             if comb_dataset.t_synthetic_data is None:
@@ -65,10 +67,14 @@ class ColumnCombs:
 
     def getDataframeByColumns(self,
                               columns: List[str],
-                              version: Optional[str]='initial') -> pd.DataFrame:
+                              wpf_values: Optional[List] = None,
+                              wpf_feature: Optional[str] = None, 
+                              version: Optional[str] = 'initial') -> pd.DataFrame:
         """
         Returns the synthetic dataframe with the corresponding columns
         """
+        if wpf_feature is not None:
+            columns += [wpf_feature]
         # Remove duplicates (can happen if for instance correlation between
         # the same column is being computed)
         columns = list(set(columns))
@@ -81,15 +87,24 @@ class ColumnCombs:
             else:
                 col_key = self.default_col_key
         if version == 'd_':
-            return self.comb_dataframes[col_key].d_synthetic_data
+            df_syn = self.comb_dataframes[col_key].d_synthetic_data
         elif version == 't_':
-            return self.comb_dataframes[col_key].t_synthetic_data
+            df_syn = self.comb_dataframes[col_key].t_synthetic_data
         elif version == 'initial':
-            return self.comb_dataframes[col_key].synthetic_data
+            df_syn = self.comb_dataframes[col_key].synthetic_data
         elif version == 'c_':
-            return self.comb_dataframes[col_key].c_synthetic_data
+            df_syn = self.comb_dataframes[col_key].c_synthetic_data
         else:
             raise Exception(f'Unexpected col_comb version {version}')
+        # make a copy, cause I'm not 100% sure that the calling code won't modify df_syn
+        df_syn = df_syn.copy()
+        if wpf_feature:
+            # Select subset of rows where column wpf_feature matches wpf_values
+            # TODO: here we assume we need the initial dataframe, but cleaner if this
+            # knowledge is handed to us from the caller
+            df_syn_initial = self.comb_dataframes[col_key].synthetic_data
+            df_syn = df_syn[df_syn_initial[wpf_feature].isin(wpf_values)]
+        return df_syn
 
     def saveEncounteredColumns(self):
         ''' This is simply for the purpose of learning what combinations
