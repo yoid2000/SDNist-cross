@@ -50,7 +50,7 @@ def percentile_rank_synthetic(synthetic: pd.DataFrame,
             else:
                 min_b = max_b
                 final_st.loc[(st[f] > min_b), f] = b
-        s.loc[nna_mask, f] = final_st
+        s.loc[nna_mask, f] = final_st[f]
     return s
 
 

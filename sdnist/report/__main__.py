@@ -20,7 +20,6 @@ from sdnist.utils import *
 
 from sdnist.load import DEFAULT_DATASET
 
-
 def run(synthetic_filepath: Path,
         output_directory: Path = REPORTS_DIR,
         dataset_name: TestDatasetName = TestDatasetName.NONE,
@@ -43,7 +42,7 @@ def run(synthetic_filepath: Path,
         log.end_msg()
 
         log.msg('Loading Column Combinations Synthetic Data', level=2)
-        col_comb = ColumnCombs(synthetic_filepath)
+        col_comb = ColumnCombs(dataset, synthetic_filepath, dataset_name, data_root)
 
         # Create scores
         log.msg('Computing Utility Scores', level=2)
@@ -156,5 +155,11 @@ class NoAction(argparse.Action):
 
 if __name__ == "__main__":
 
+    if False:
+        run(synthetic_filepath=Path('c:\\paul\\sdnist\\deids\\texas\\texas_all_syn.csv'),
+             output_directory=Path('C:\\paul\\GitHub\\SDNist-cross\\sdnist\\report\\reports\\tx2019_02-01-2024T11.35.52'),
+             dataset_name=TestDatasetName.tx2019,
+             data_root=Path('c:\\paul\\sdnist\\diverse_communities_data_excerpts'))
+        quit()
     input_cnf = setup()
     run(**input_cnf)

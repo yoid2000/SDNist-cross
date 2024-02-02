@@ -125,6 +125,8 @@ class UnivariatePlots:
                                output_directory: Path,
                                col_comb: Optional[ColumnCombs]=None,
                                level=2):
+        # Need to make a copy because may overwrite this with synthetic version
+        synthetic = synthetic.copy()
         ds = dataset
         o_path = output_directory
         bar_width = 0.4
@@ -140,7 +142,9 @@ class UnivariatePlots:
             self.uni_counts[f] = dict()
             if f == INDP and INDP_CAT in target.columns.tolist():
                 all_sectors = o_tar[INDP_CAT].unique().tolist()
-                col_comb.getDataframeByColumns([INDP_CAT],version='c_')
+                # We don't need to copy c_synthetic_data because o_syn is only a reference to it
+                o_syn = col_comb.getDataframeByColumns([f, INDP_CAT],version='c_')
+                o_syn = o_syn.loc[synthetic.index]
                 set(all_sectors).update(set(o_syn[INDP_CAT].unique().tolist()))
                 selected = []
                 # print(all_sectors)
@@ -215,7 +219,7 @@ class UnivariatePlots:
             else:
                 plt.figure(figsize=(8, 3), dpi=100)
                 file_path = Path(o_path, f'{f}.jpg')
-                col_comb.getDataframeByColumns([f])
+                synthetic = col_comb.getDataframeByColumns([f], version = 'd_')
                 values = set(target[f].unique().tolist()).union(synthetic[f].unique().tolist())
                 values = sorted(values)
                 val_df = pd.DataFrame(values, columns=[f])
@@ -316,6 +320,8 @@ def divergence(synthetic: pd.DataFrame,
     if not ignore_features:
         ignore_features = []
 
+    # Need to make a copy because may overwrite this with synthetic version
+    synthetic = synthetic.copy()
     div_data = []  # divergence data
     tfeats = target.columns.tolist()
     sfeats = synthetic.columns.tolist()
@@ -324,7 +330,7 @@ def divergence(synthetic: pd.DataFrame,
             continue
         if var in ignore_features:
             continue
-        col_comb.getDataframeByColumns([var])
+        synthetic = col_comb.getDataframeByColumns([var], version = 'd_')
         values = set(target[var].unique().tolist()).union(synthetic[var].unique().tolist())
         values = sorted(values)
         val_df = pd.DataFrame(values, columns=[var])

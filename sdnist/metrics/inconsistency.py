@@ -133,10 +133,11 @@ class Inconsistencies:
         # extract the appropriate synthesized table for each features set.
         for features in ic_features_list_distinct:
             if self.col_comb is not None:
-                self.col_comb.getDataframeByColumns(features, version = 'c_')
-            _one_compute_pass(self.s, features, ic_dict)
+                syn = self.col_comb.getDataframeByColumns(features, version = 'c_')
+            _one_compute_pass(syn, features, ic_dict)
 
         # ------- Output Statistics ------------------------
+        # n here is just used in a general statistical sense, so ok if it is off a bit
         [n, f] = self.s.shape
 
         # ------- Compute Age-based Inconsistencies------------
@@ -150,7 +151,8 @@ class Inconsistencies:
                 ic_age[i[NAME]] = ic_dict[i[NAME]]
                 if len(ic_dict[i[NAME]]) > 0:  # if this ic actually occurred
                     age_violators = age_violators.union(ic_dict[i[NAME]])
-                    example_row = self.s.loc[[ic_dict[i[NAME]][0]], :]
+                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} '
                                                                      f'violations', example_row]
@@ -180,7 +182,8 @@ class Inconsistencies:
                 ic_work[i[NAME]] = ic_dict[i[NAME]]
                 if len(ic_dict[i[NAME]]) > 0:
                     work_violators = work_violators.union(ic_dict[i[NAME]])
-                    example_row = self.s.loc[[ic_dict[i[NAME]][0]], :]
+                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} '
                                                                      f'violations', example_row]
@@ -210,7 +213,8 @@ class Inconsistencies:
                 if len(ic_dict[i[NAME]]) > 0:
                     ic_house[i[NAME]] = ic_dict[i[NAME]]
                     house_violators = house_violators.union(ic_dict[i[NAME]])
-                    example_row = self.s.loc[[ic_dict[i[NAME]][0]], :]
+                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} violations',
                                example_row]

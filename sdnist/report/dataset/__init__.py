@@ -66,7 +66,8 @@ def feature_space_size(target_df: pd.DataFrame, data_dict: Dict):
                      'DEAR']:
             size = size * len(data_dict[col]['values'])
         elif col in ['PUMA', 'DENSITY']:
-            size = size * len(target_df['PUMA'].unique())
+            # size = size * len(target_df['PUMA'].unique())   # TODO: bug???
+            size = size * len(target_df[col].unique())
         elif col in ['NOC', 'NPF', 'INDP']:
             size = size * len(target_df[col].unique())
 
@@ -210,15 +211,14 @@ class Dataset:
         self.d_target_data = percentile_rank_target(self.c_target_data, numeric_features)
         self.d_target_data = add_bin_for_NA(self.d_target_data,
                                             self.c_target_data, numeric_features)
-
         self.d_synthetic_data = percentile_rank_synthetic(self.c_synthetic_data,
-                                                          self.c_target_data,
-                                                          self.d_target_data,
-                                                          numeric_features)
-
+                                                            self.c_target_data,
+                                                            self.d_target_data,
+                                                            numeric_features)
         self.d_synthetic_data = add_bin_for_NA(self.d_synthetic_data,
-                                               self.c_synthetic_data,
-                                               numeric_features)
+                                            self.c_synthetic_data,
+                                            numeric_features)
+
 
         non_numeric = [c for c in self.features
                        if c not in numeric_features]

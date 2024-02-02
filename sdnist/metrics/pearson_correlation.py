@@ -35,12 +35,13 @@ class PearsonCorrelationDifference:
 
     def pair_wise_correlations(self, data: pd.DataFrame,
                                col_comb: Optional[ColumnCombs] = None) -> pd.DataFrame:
+        data = data.copy()
         corr_list = []
         for f_a in self.features:
             f_corr = []
             for f_b in self.features:
                 if col_comb is not None:
-                    col_comb.getDataframeByColumns([f_a, f_b], version='t_')
+                    data = col_comb.getDataframeByColumns([f_a, f_b], version='t_')
                 corr, _ = pearsonr(data[f_a], data[f_b])
                 f_corr.append(corr)
             corr_list.append(f_corr)
