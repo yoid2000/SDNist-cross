@@ -74,9 +74,8 @@ def privacy_score(dataset: Dataset,
     if ds.challenge == CENSUS:
         quasi_idf = ['SEX', 'MSP', 'RAC1P', 'OWN_RENT', 'EDU', 'PUMA', 'INDP_CAT', 'HISP']
         quasi_idf = list(set(ds.features).intersection(set(quasi_idf)))
-        c_syn = col_comb.getDataframeByColumns(quasi_idf, version='c_')
         excluded = []
-        amd_plot = ApparentMatchDistributionPlot(c_syn,
+        amd_plot = ApparentMatchDistributionPlot(ds.c_synthetic_data,
                                                  ds.c_target_data,
                                                  r_ui_d.output_directory,
                                                  quasi_idf,
