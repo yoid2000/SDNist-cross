@@ -17,7 +17,7 @@ class ColumnCombs:
                  synthetic_filepath: Path,
                  dataset_name: TestDatasetName,
                  data_root: Path,
-                 exact_matches_only: Optional[bool] = False 
+                 exact_matches_only: Optional[bool] = True 
                  ):
         """
         Reads in all of the synthetic tables (for each column combination)
