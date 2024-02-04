@@ -12,6 +12,14 @@ For SDNist-cross, the same command line syntax is used, but all of the synthetic
 
 Note that if all of the 24 columns are used, then there are a total of 445 column combinations (in addition to the complete table). The list of column combinations can be found at `sdnist/report/column_combs/all_column_combinations.json`.
 
+## How it works
+
+SDNist-cross starts by reading in all of the synthetic tables and processing them as Dataset objects.
+
+Whenever a measurement is to be made on some set of synthetic data columns, the appropriate synthetic data with the same columns is retrieved and used to make the measure.
+
+Following is the original SDNist README documentation:
+
 # SDNist v2.3: Deidentified Data Report Tool
 
 ## [SDNist is the offical software package for engaging in the NIST Collaborative Research Cycle](https://pages.nist.gov/privacy_collaborative_research_cycle)
