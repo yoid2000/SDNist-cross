@@ -26,8 +26,18 @@ ic_types = [
     ("a", "adult_child", "Even when the AGEP feature is not explicitly used, "
                          "features which use N to indicate children ( < 15) must agree",
      ["MSP", "PINCP", "PINCP_DECILE"]),
-    ("a", "adult_N", "Adults ( > 14) must specify values (other than N) for all adult features",
-     ["AGEP", "MSP", "PINCP", "PINCP_DECILE", "EDU", "DPHY", "DREM"]),
+    ("a", "adult_N_MSP", "Adults ( > 14) must specify values (other than N) for MSP",
+     ["AGEP", "MSP"]),
+    ("a", "adult_N_PINCP", "Adults ( > 14) must specify values (other than N) for PINCP",
+     ["AGEP", "PINCP"]),
+    ("a", "adult_N_DECILE", "Adults ( > 14) must specify values (other than N) for PINCP_DECILE",
+     ["AGEP", "PINCP_DECILE"]),
+    ("a", "adult_N_EDU", "Adults ( > 14) must specify values (other than N) for EDU",
+     ["AGEP", "EDU"]),
+    ("a", "adult_N_DPHY", "Adults ( > 14) must specify values (other than N) for DPHY",
+     ["AGEP", "DPHY"]),
+    ("a", "adult_N_DREM", "Adults ( > 14) must specify values (other than N) for DREM",
+     ["AGEP", "DREM"]),
     ("a", "toddler_DPHY", "Toddlers (< 5) naturally toddle, it's not a physical disability",
      ["AGEP", "DPHY"]),
     ("a", "toddler_DREM", "Toddlers (< 5) are naturally forgetful, it's not a cognitive disability",
@@ -151,7 +161,7 @@ class Inconsistencies:
                 ic_age[i[NAME]] = ic_dict[i[NAME]]
                 if len(ic_dict[i[NAME]]) > 0:  # if this ic actually occurred
                     age_violators = age_violators.union(ic_dict[i[NAME]])
-                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    syn = self.col_comb.getDataframeByColumns(_get_features_from_name(i[NAME]), version = 'c_')
                     example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} '
@@ -182,7 +192,7 @@ class Inconsistencies:
                 ic_work[i[NAME]] = ic_dict[i[NAME]]
                 if len(ic_dict[i[NAME]]) > 0:
                     work_violators = work_violators.union(ic_dict[i[NAME]])
-                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    syn = self.col_comb.getDataframeByColumns(_get_features_from_name(i[NAME]), version = 'c_')
                     example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} '
@@ -213,7 +223,7 @@ class Inconsistencies:
                 if len(ic_dict[i[NAME]]) > 0:
                     ic_house[i[NAME]] = ic_dict[i[NAME]]
                     house_violators = house_violators.union(ic_dict[i[NAME]])
-                    syn = self.col_comb.getDataframeByColumns(i[FEATURES], version = 'c_')
+                    syn = self.col_comb.getDataframeByColumns(_get_features_from_name(i[NAME]), version = 'c_')
                     example_row = syn.loc[[ic_dict[i[NAME]][0]], :]
 
                     ic_data = [i[NAME], i[DESCRIPTION], i[FEATURES], f'{len(ic_dict[i[NAME]])} violations',
@@ -249,6 +259,10 @@ class Inconsistencies:
                                         'Percent Records Inconsistent': r[2]}
                                  for r in overall_stats]
 
+def _get_features_from_name(name):
+    for ic_type in ic_types:
+        if ic_type[NAME] == name:
+            return ic_type[FEATURES]
 
 def _one_compute_pass(data, fl, ic_dict):
     # look through records, register violations for each row
@@ -304,13 +318,18 @@ def _one_compute_pass(data, fl, ic_dict):
 
         # this catches adults who still have the child 'N' for their features.
         if "AGEP" in fl and r["AGEP"] > 15:
-            if ("MSP" in fl and (r["MSP"] == 'N')) or (
-                    "PINCP" in fl and (r["PINCP"] == 'N')) or (
-                    "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N')) or (
-                    "EDU" in fl and (r["EDU"] == 'N')) or (
-                    "DPHY" in fl and (r["DPHY"] == 'N')) or (
-                    "DREM" in fl and (r["DREM"] == 'N')):
-                ic_dict["adult_N"].append(i)
+            if "MSP" in fl and (r["MSP"] == 'N'):
+                ic_dict["adult_N_MSP"].append(i)
+            if "PINCP" in fl and (r["PINCP"] == 'N'):
+                ic_dict["adult_N_PINCP"].append(i)
+            if "PINCP_DECILE" in fl and (r["PINCP_DECILE"] == 'N'):
+                ic_dict["adult_N_PINCP_DECILE"].append(i)
+            if "EDU" in fl and (r["EDU"] == 'N'):
+                ic_dict["adult_N_EDU"].append(i)
+            if "DPHY" in fl and (r["DPHY"] == 'N'):
+                ic_dict["adult_N_DPHY"].append(i)
+            if "DREM" in fl and (r["DREM"] == 'N'):
+                ic_dict["adult_N_DREM"].append(i)
 
 
         # -------------------work and finance related inconsistencies---------------
