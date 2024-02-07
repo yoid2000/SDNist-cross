@@ -102,10 +102,10 @@ def bin_density(data: pd.DataFrame, data_dict: Dict, update: bool = True) -> pd.
     d.loc[d['DENSITY'] > n_max, 'DENSITY'] = float(n_max) - 100
 
     if update:
-        d['DENSITY'] = pd.cut(d['DENSITY'], bins=bins, labels=labels)
+        d['DENSITY'] = pd.cut(d['DENSITY'], bins=bins, labels=labels, include_lowest=True)
         return d
     else:
-        d['binned_density'] = pd.cut(d['DENSITY'], bins=bins, labels=labels)
+        d['binned_density'] = pd.cut(d['DENSITY'], bins=bins, labels=labels, include_lowest=True)
 
         d['bin_range'] = d['binned_density'].apply(lambda x: get_bin_range_log(x))
         return d

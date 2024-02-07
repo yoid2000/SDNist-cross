@@ -156,7 +156,7 @@ class NoAction(argparse.Action):
 if __name__ == "__main__":
 
     if False:
-        run(synthetic_filepath=Path('c:\\paul\\sdnist\\deids\\texas\\texas_all_syn.csv'),
+        run(synthetic_filepath=Path('c:\\paul\\sdnist\\deids\\national\\national_mw22_mt0.075.csv'),
              output_directory=Path('C:\\paul\\GitHub\\SDNist-cross\\sdnist\\report\\reports\\test1'),
              dataset_name=TestDatasetName.tx2019,
              data_root=Path('c:\\paul\\sdnist\\diverse_communities_data_excerpts'))
