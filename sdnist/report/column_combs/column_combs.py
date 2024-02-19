@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from pathlib import Path
-from typing import List, Optional, Generator
+from typing import List, Optional
 from sdnist.report import Dataset
 from sdnist.report.dataset.validate import validate
 from sdnist.report.dataset.binning import *
