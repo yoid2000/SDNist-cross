@@ -72,8 +72,6 @@ class ColumnCombs:
             if skip_default and col_key == self.default_col_key:
                 continue
             allCombinations.append(list(comb_dataset.synthetic_data.columns))
-            if len(allCombinations) > 10:    #TODO: remove this!
-                break
         return allCombinations
 
     def getDataframeByColumns(self,

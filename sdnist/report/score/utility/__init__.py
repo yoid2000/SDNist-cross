@@ -620,14 +620,12 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
     score_sums = []
     all_combs = col_comb.getAllColumnCombinations()
     for columns in all_combs:
-        print(columns)
         data = col_comb.getDataframeByColumns(columns, version = 't_')
         s = PropensityMSE(ds.t_target_data[columns],
                           data,
                           r_ui_d.output_directory,
                           columns)
         score_sums.append(s.compute_score())
-        print(sum(score_sums)/len(score_sums))
     # Then compute propensity score for the complete set, this time
     # saving the results in a backwards compatible way
     s = PropensityMSE(ds.t_target_data,
