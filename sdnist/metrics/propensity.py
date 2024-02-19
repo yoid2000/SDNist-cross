@@ -94,8 +94,16 @@ class PropensityMSE:
         orig_syn_prob = syn_prob[:t.shape[0]]
         syn_syn_prob = syn_prob[t.shape[0]:]
         self.ks_score = ks_2samp(orig_syn_prob, syn_syn_prob)
-        self.report_data["pmse_score"] = self.pmse_score
-        self.report_data["propensity_distribution"] = relative_path(save_data_frame(self.prob_dist,
-                                                                                    self.o_path,
-                                                                                    'propensity_distribution'))
         return self.pmse_score
+
+    def save_score(self, avg_score: Optional[float] = None):
+        ''' This must be called only on the last propensity score
+            computation.
+        '''
+        if avg_score is not None:
+            self.score = avg_score
+            self.report_data["pmse_score"] = avg_score
+            self.report_data["full_pmse_score"] = self.pmse_score
+        else:
+            self.report_data["pmse_score"] = self.pmse_score
+        self.report_data["propensity_distribution"] = relative_path(save_data_frame(self.prob_dist, self.o_path, 'propensity_distribution'))

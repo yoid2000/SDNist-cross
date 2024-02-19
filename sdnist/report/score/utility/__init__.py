@@ -615,11 +615,27 @@ def utility_score(dataset: Dataset, ui_data: ReportUIData, report_data: ReportDa
     log.end_msg()
 
     log.msg('PropensityMSE', level=3)
+    # Compute a propensity score for each combination except the
+    # full combination
+    score_sums = []
+    all_combs = col_comb.getAllColumnCombinations()
+    for columns in all_combs:
+        print(columns)
+        data = col_comb.getDataframeByColumns(columns, version = 't_')
+        s = PropensityMSE(ds.t_target_data[columns],
+                          data,
+                          r_ui_d.output_directory,
+                          columns)
+        score_sums.append(s.compute_score())
+        print(sum(score_sums)/len(score_sums))
+    # Then compute propensity score for the complete set, this time
+    # saving the results in a backwards compatible way
     s = PropensityMSE(ds.t_target_data,
                       ds.t_synthetic_data,
                       r_ui_d.output_directory,
                       features)
-    s.compute_score()
+    score_sums.append(s.compute_score())
+    s.save_score(sum(score_sums)/len(score_sums))
     metric_name = s.NAME
 
     metric_score = int(s.score) if s.score > 100 else round(s.score, 3)

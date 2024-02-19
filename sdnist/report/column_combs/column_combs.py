@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Generator
 from sdnist.report import Dataset
 from sdnist.report.dataset.validate import validate
 from sdnist.report.dataset.binning import *
@@ -65,6 +65,17 @@ class ColumnCombs:
                 raise Exception(f'Missing synthetic_data for {col_key}')
             self.comb_dataframes[col_key] = comb_dataset
 
+    def getAllColumnCombinations(self,
+                         skip_default: Optional[bool] = True) -> List[List[str]]:
+        allCombinations = []
+        for col_key, comb_dataset in self.comb_dataframes.items():
+            if skip_default and col_key == self.default_col_key:
+                continue
+            allCombinations.append(list(comb_dataset.synthetic_data.columns))
+            if len(allCombinations) > 10:    #TODO: remove this!
+                break
+        return allCombinations
+
     def getDataframeByColumns(self,
                               columns: List[str],
                               wpf_values: Optional[List] = None,
@@ -119,34 +130,3 @@ class ColumnCombs:
         print(f"{len(distinct_columns)} distinct columns")
         with open("columns.json", 'w') as f:
             json.dump(distinct_columns, f, indent=4)
-
-
-#
-#            df = pd.read_csv(csv_path)
-#            columns = list(df.columns)
-#            columns.sort()
-#            col_key = self._makeColumnsKey(columns)
-#            self.comb_dataframes['initial'][col_key] = df
-#            # The following mimics the steps in Dataset __post_init__
-#            self.comb_dataframes['c_'][col_key], _ = \
-#                        validate(df, dataset.data_dict, columns)
-#            self.comb_dataframes['initial'][col_key] = self.comb_dataframes['c_'][col_key]
-#            self.comb_dataframes['initial'][col_key] = self.comb_dataframes['initial'][col_key].reindex(sorted(self.comb_dataframes['initial'][col_key].columns), axis=1)
-#            self.comb_dataframes['c_'][col_key] = self.comb_dataframes['c_'][col_key].reindex(sorted(self.comb_dataframes['c_'][col_key].columns), axis=1)
-#            if 'DENSITY' in columns:
-#                self.comb_dataframes['initial'][col_key] = bin_density(self.comb_dataframes['c_'][col_key], dataset.data_dict, update=True)
-#            self.comb_dataframes['t_'][col_key] = transform(self.comb_dataframes['c_'][col_key], dataset.schema)
-#            numeric_features = ['AGEP', 'POVPIP', 'PINCP', 'PWGTP', 'WGTP']
-#            numeric_features = list(set(numeric_features) & set(columns))
-#            if len(numeric_features) > 0:
-#                print(f"Work on {numeric_features} for {columns}")
-#                self.comb_dataframes['d_'][col_key] = \
-#                    percentile_rank_synthetic(self.comb_dataframes['c_'][col_key],
-#                                              dataset.c_target_data[numeric_features],
-#                                              dataset.d_target_data[numeric_features],
-#                                              numeric_features)
-#                self.comb_dataframes['d_'][col_key] = \
-#                    add_bin_for_NA(self.comb_dataframes['d_'][col_key],
-#                                   self.comb_dataframes['c_'][col_key],
-#                                   numeric_features)
-#
