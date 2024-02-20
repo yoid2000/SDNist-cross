@@ -79,7 +79,8 @@ def privacy_score(dataset: Dataset,
                                                  ds.c_target_data,
                                                  r_ui_d.output_directory,
                                                  quasi_idf,
-                                                 excluded)
+                                                 excluded,
+                                                 col_comb = col_comb)
         amd_plot_paths = amd_plot.save()
         rd.add('apparent_match_distribution', amd_plot.report_data)
     else:

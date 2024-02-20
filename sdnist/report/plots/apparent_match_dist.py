@@ -8,6 +8,7 @@ import pandas as pd
 
 from sdnist.metrics.apparent_match_dist import cellchange
 from sdnist.utils import *
+from sdnist.report.column_combs.column_combs import ColumnCombs
 
 # plt.style.use('seaborn-v0_8-deep')
 
@@ -44,7 +45,9 @@ class ApparentMatchDistributionPlot:
                  target: pd.DataFrame,
                  output_directory: Path,
                  quasi_features: List[str],
-                 exclude_features: List[str]):
+                 exclude_features: List[str],
+                 col_comb: Optional[ColumnCombs] = None,
+                 ):
         """
         Computes and plots apparent records match distribution between
         synthetic and target data
@@ -70,6 +73,7 @@ class ApparentMatchDistributionPlot:
         self.exclude_features = exclude_features
         self.quasi_matched_df = pd.DataFrame()
         self.report_data = dict()
+        self.col_comb = col_comb
         self._setup()
 
     def _setup(self):
@@ -91,4 +95,29 @@ class ApparentMatchDistributionPlot:
             relative_path(save_data_frame(mu, self.o_path, 'unique_matched_percents'))
         self.report_data['plot'] = relative_path(save_file_path)
 
+        '''
+        The above code is backwards compatible with legacy SDNIST. Now
+        we want to consider that, in a query-based setting, an attacker
+        would query for only the quasi-identifiers and a single additional
+        feature that the attacker wanted to infer. We do that here.
+        Note that we use 'c_' tables
+        '''
+        self.report_data['query_unique_matches'] = {}
+        self.report_data['quasi_identifiers'] = self.quasi_features
+        non_qi_features = list(set(self.quasi_features) ^ set(self.tar.columns))
+        for non_qi_feature in non_qi_features:
+            if non_qi_feature in self.exclude_features:
+                continue
+            all_features = self.quasi_features + [non_qi_feature]
+            df_syn = self.col_comb.getDataframeByColumns(all_features, version = 'c_')
+            percents, u1, u2, mu = cellchange(df_syn[all_features],
+                                              self.tar[all_features],
+                                              self.quasi_features,
+                                              self.exclude_features)
+            unique_matches = len(percents[percents == 100.0])
+            self.report_data['query_unique_matches'][non_qi_feature] = \
+                {'matches': unique_matches,
+                 'unique_quasi_identifiers':len(percents),
+                 'percent': unique_matches / len(percents),
+                }
         return [save_file_path]
