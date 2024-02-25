@@ -30,7 +30,7 @@ ic_types = [
      ["AGEP", "MSP"]),
     ("a", "adult_N_PINCP", "Adults ( > 14) must specify values (other than N) for PINCP",
      ["AGEP", "PINCP"]),
-    ("a", "adult_N_DECILE", "Adults ( > 14) must specify values (other than N) for PINCP_DECILE",
+    ("a", "adult_N_PINCP_DECILE", "Adults ( > 14) must specify values (other than N) for PINCP_DECILE",
      ["AGEP", "PINCP_DECILE"]),
     ("a", "adult_N_EDU", "Adults ( > 14) must specify values (other than N) for EDU",
      ["AGEP", "EDU"]),
