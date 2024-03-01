@@ -78,7 +78,6 @@ class PCAReport:
         pca_m.compute_pca()
         plot_paths = pca_m.plot(o_path)
         ks_scores = pca_m.compute_ks()
-        print(ks_scores)
 
         # acpp: all components pair-plot paths
         acpp_tar, acpp_deid = plot_paths[strs.ALL_COMPONENTS_PAIR_PLOT]
