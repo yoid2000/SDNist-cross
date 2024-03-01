@@ -77,6 +77,8 @@ class PCAReport:
 
         pca_m.compute_pca()
         plot_paths = pca_m.plot(o_path)
+        ks_scores = pca_m.compute_ks()
+        print(ks_scores)
 
         # acpp: all components pair-plot paths
         acpp_tar, acpp_deid = plot_paths[strs.ALL_COMPONENTS_PAIR_PLOT]
@@ -91,7 +93,8 @@ class PCAReport:
          "deidentified_all_components_plot": relative_path(acpp_deid),
          "highlighted_plots": {f'{k[0]}-{k[1]}-{k[2]}':
                                    [relative_path(v[0], 3), relative_path(v[1], 3)]
-             for k, v in plot_paths[strs.HIGHLIGHTED].items()}
+             for k, v in plot_paths[strs.HIGHLIGHTED].items()},
+         "ks_scores": ks_scores,
         }
 
         self.rd.add('pca', pca_rd)
