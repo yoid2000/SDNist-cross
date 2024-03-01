@@ -3,6 +3,7 @@ import time
 from typing import Dict
 from pathlib import Path
 import pandas as pd
+from scipy.stats import ks_2samp
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -91,6 +92,13 @@ class PCAMetric:
                                               self.t_pdf[c].min(),
                                               self.t_pdf[c].max())
 
+    def compute_ks(self):
+        ks_scores = []
+        for pc in list(self.t_pdf_s.columns):
+            ks_score = ks_2samp(self.t_pdf_s[pc], self.s_pdf_s[pc])
+            ks_scores.append(ks_score.statistic)
+        return ks_scores
+
     def plot(self, output_directory: Path) -> Dict[str, any]:
         s = time.time()
         plot_paths = dict()
@@ -160,7 +168,6 @@ def min_max_scaling(series, min_val=None, max_val=None):
         max_val = series.max()
 
     return (series - min_val) / (max_val - min_val)
-
 
 def plot_all_components_pairs(title: str,
                               data: pd.DataFrame,
