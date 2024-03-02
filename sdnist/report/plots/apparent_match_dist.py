@@ -115,9 +115,13 @@ class ApparentMatchDistributionPlot:
                                               self.quasi_features,
                                               self.exclude_features)
             unique_matches = len(percents[percents == 100.0])
+            if len(percents) > 0:
+                percent = unique_matches / len(percents)
+            else:
+                percent = 0
             self.report_data['query_unique_matches'][non_qi_feature] = \
                 {'matches': unique_matches,
                  'unique_quasi_identifiers':len(percents),
-                 'percent': unique_matches / len(percents),
+                 'percent': percent,
                 }
         return [save_file_path]

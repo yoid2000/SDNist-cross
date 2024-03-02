@@ -144,7 +144,7 @@ class Inconsistencies:
         for features in ic_features_list_distinct:
             if self.col_comb is not None:
                 syn = self.col_comb.getDataframeByColumns(features, version = 'c_')
-            _one_compute_pass(syn, features, ic_dict)
+            _one_compute_pass(syn, ic_dict)
 
         # ------- Output Statistics ------------------------
         # n here is just used in a general statistical sense, so ok if it is off a bit
@@ -264,9 +264,10 @@ def _get_features_from_name(name):
         if ic_type[NAME] == name:
             return ic_type[FEATURES]
 
-def _one_compute_pass(data, fl, ic_dict):
+def _one_compute_pass(data, ic_dict):
     # look through records, register violations for each row
     # i = record id, r = record values
+    fl = list(data.columns)
     for i, r in data.iterrows():
         # -------------------age related inconsistencies---------------
         if "AGEP" in fl and r["AGEP"] < 15:
